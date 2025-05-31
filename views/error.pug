@@ -1,0 +1,72 @@
+//- File: views/error.pug
+//- Error page template
+
+extends layout
+
+block content
+  .container-fluid
+    .row.justify-content-center
+      .col-md-6.text-center
+        .card.border-0.shadow-sm
+          .card-body.p-5
+            .mb-4
+              if error.status === 404
+                .text-danger.mb-3
+                  svg.icon.icon-lg: use(href='#tabler-alert-circle')
+                h1.display-4.text-muted 404
+                h3.h4 Page Not Found
+              else if error.status === 403
+                .text-warning.mb-3
+                  svg.icon.icon-lg: use(href='#tabler-shield-x')
+                h1.display-4.text-muted 403
+                h3.h4 Access Denied
+              else if error.status === 401
+                .text-info.mb-3
+                  svg.icon.icon-lg: use(href='#tabler-lock')
+                h1.display-4.text-muted 401
+                h3.h4 Authentication Required
+              else
+                .text-danger.mb-3
+                  svg.icon.icon-lg: use(href='#tabler-alert-triangle')
+                h1.display-4.text-muted= error.status || 500
+                h3.h4 Something went wrong
+                
+            p.text-muted.mb-4= message || 'An unexpected error occurred'
+            
+            .d-flex.gap-2.justify-content-center
+              if error.status === 401
+                a.btn.btn-primary(href='/login')
+                  svg.icon.me-2: use(href='#tabler-login')
+                  | Login
+              else
+                a.btn.btn-primary(href='/')
+                  svg.icon.me-2: use(href='#tabler-home')
+                  | Go Home
+              
+              if user
+                a.btn.btn-outline-secondary(href='/admin')
+                  svg.icon.me-2: use(href='#tabler-dashboard')
+                  | Dashboard
+
+    // Add missing icons
+    svg(style='display: none;')
+      symbol#tabler-alert-circle(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        circle(cx='12', cy='12', r='10')
+        line(x1='12', y1='8', x2='12', y2='12')
+        line(x1='12', y1='16', x2='12.01', y2='16')
+      symbol#tabler-shield-x(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M13.5 12l2.5 2.5m0-2.5l-2.5 2.5')
+        path(d='M12 3a4 4 0 0 0-4 4v2a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2V7a4 4 0 0 0-4-4z')
+      symbol#tabler-lock(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        rect(x='3', y='11', width='18', height='11', rx='2', ry='2')
+        circle(cx='12', cy='16', r='1')
+        path(d='M7 11V7a5 5 0 0 1 10 0v4')
+      symbol#tabler-alert-triangle(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z')
+      symbol#tabler-home(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M5 12l-2 0l9 -9l9 9l-2 0')
+        path(d='M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7')
+        path(d='M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6')
+      symbol#tabler-login(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2')
+        path(d='M20 12h-13l3 -3m0 6l-3 -3')

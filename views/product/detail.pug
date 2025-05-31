@@ -1,0 +1,57 @@
+//- File: views/product/detail.pug
+//- Auto-generated detail view for Products
+
+extends ../layout
+
+block content
+  .container-fluid
+    .row
+      .col-12
+        .card
+          .card-header.d-flex.justify-content-between.align-items-center
+            h3.card-title
+              i.ti-package.me-2
+              | Products Details
+            .btn-group
+              a.btn.btn-secondary(href='/admin/product/' + record._id + '/edit')
+                i.ti-edit.me-1
+                | Edit
+              a.btn.btn-outline-secondary(href='/admin/product')
+                i.ti-arrow-left.me-1
+                | Back to List
+                
+          .card-body
+            .row
+              .col-md-6.mb-3
+                strong Product Name:
+                p= record.name || '-'
+              .col-md-6.mb-3
+                strong Description:
+                p= record.description || '-'
+              .col-md-6.mb-3
+                strong Price:
+                p= record.price || '-'
+              .col-md-6.mb-3
+                strong Category:
+                p= record.category || '-'
+              .col-md-6.mb-3
+                strong In Stock:
+                p= record.inStock || '-'
+              .col-md-6.mb-3
+                strong SKU:
+                p= record.sku || '-'
+              .col-md-6.mb-3
+                strong Owner:
+                p= record.owner || '-'
+                
+            if record.createdAt || record.updatedAt
+              hr
+              .row
+                if record.createdAt
+                  .col-md-6.mb-3
+                    strong Created:
+                    p= moment(record.createdAt).format('YYYY-MM-DD HH:mm:ss')
+                if record.updatedAt
+                  .col-md-6.mb-3
+                    strong Updated:
+                    p= moment(record.updatedAt).format('YYYY-MM-DD HH:mm:ss')

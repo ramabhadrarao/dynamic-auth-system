@@ -1,0 +1,303 @@
+//- File: views/admin/dashboard.pug
+//- Admin dashboard with statistics and overview
+
+extends ../layout
+
+block content
+  .container-fluid
+    //- Welcome section
+    .row.mb-3
+      .col-12
+        .card.bg-primary.text-white
+          .card-body
+            h1.h3.mb-1 Welcome back, #{user.firstName}!
+            p.mb-0 Here's what's happening in your system today.
+
+    //- Statistics cards
+    .row.g-3.mb-4
+      .col-sm-6.col-lg-3
+        .card
+          .card-body
+            .d-flex.align-items-center
+              .subheader Users
+              .ms-auto.lh-1
+                .dropdown
+                  a.dropdown-toggle.text-muted(href='#', data-bs-toggle='dropdown')
+                    svg.icon: use(href='#tabler-dots-vertical')
+                  .dropdown-menu.dropdown-menu-end
+                    a.dropdown-item(href='/admin/users') View All
+                    a.dropdown-item(href='/admin/users/new') Add New
+            .d-flex.align-items-baseline
+              .h1.mb-0= stats.users
+              .ms-auto
+                span.text-success.d-inline-flex.align-items-center.lh-1
+                  | +5%
+                  svg.icon.ms-1: use(href='#tabler-trending-up')
+            .mt-1
+              span.text-muted Active users
+
+      .col-sm-6.col-lg-3
+        .card
+          .card-body
+            .d-flex.align-items-center
+              .subheader Models
+              .ms-auto.lh-1
+                .dropdown
+                  a.dropdown-toggle.text-muted(href='#', data-bs-toggle='dropdown')
+                    svg.icon: use(href='#tabler-dots-vertical')
+                  .dropdown-menu.dropdown-menu-end
+                    a.dropdown-item(href='/admin/models') View All
+                    a.dropdown-item(href='/admin/models/new') Create New
+            .d-flex.align-items-baseline
+              .h1.mb-0= stats.models
+              .ms-auto
+                span.text-yellow.d-inline-flex.align-items-center.lh-1
+                  | +2
+                  svg.icon.ms-1: use(href='#tabler-trending-up')
+            .mt-1
+              span.text-muted Active models
+
+      .col-sm-6.col-lg-3
+        .card
+          .card-body
+            .d-flex.align-items-center
+              .subheader Files
+              .ms-auto.lh-1
+                .dropdown
+                  a.dropdown-toggle.text-muted(href='#', data-bs-toggle='dropdown')
+                    svg.icon: use(href='#tabler-dots-vertical')
+                  .dropdown-menu.dropdown-menu-end
+                    a.dropdown-item(href='/admin/files') View All
+                    a.dropdown-item(href='#', onclick='document.getElementById("fileUpload").click()') Upload
+            .d-flex.align-items-baseline
+              .h1.mb-0= stats.files
+              .ms-auto
+                span.text-green.d-inline-flex.align-items-center.lh-1
+                  | +12
+                  svg.icon.ms-1: use(href='#tabler-trending-up')
+            .mt-1
+              span.text-muted Total files
+
+      .col-sm-6.col-lg-3
+        .card
+          .card-body
+            .d-flex.align-items-center
+              .subheader Permissions
+              .ms-auto.lh-1
+                .dropdown
+                  a.dropdown-toggle.text-muted(href='#', data-bs-toggle='dropdown')
+                    svg.icon: use(href='#tabler-dots-vertical')
+                  .dropdown-menu.dropdown-menu-end
+                    a.dropdown-item(href='/admin/permissions') Manage
+            .d-flex.align-items-baseline
+              .h1.mb-0= stats.permissions
+              .ms-auto
+                span.text-blue.d-inline-flex.align-items-center.lh-1
+                  svg.icon: use(href='#tabler-shield-check')
+            .mt-1
+              span.text-muted Active permissions
+
+    //- Main content area
+    .row.g-3
+      //- Recent users
+      .col-md-6
+        .card
+          .card-header
+            h3.card-title Recent Users
+            .card-actions
+              a.btn.btn-sm.btn-outline-primary(href='/admin/users') View All
+          .card-body.p-0
+            if recentUsers && recentUsers.length > 0
+              .list-group.list-group-flush
+                each user in recentUsers
+                  .list-group-item
+                    .row.align-items-center
+                      .col-auto
+                        .avatar.avatar-rounded(style=`background-color: ${getUserColor(user.role)}`)= user.firstName.charAt(0) + user.lastName.charAt(0)
+                      .col.text-truncate
+                        strong= user.fullName
+                        .text-muted= user.email
+                      .col-auto
+                        .badge(class=getRoleBadgeClass(user.role))= user.role
+                      .col-auto.text-muted
+                        = moment(user.createdAt).fromNow()
+            else
+              .text-center.py-4
+                .text-muted No recent users
+
+      //- Recent files
+      .col-md-6
+        .card
+          .card-header
+            h3.card-title Recent Files
+            .card-actions
+              a.btn.btn-sm.btn-outline-primary(href='/admin/files') View All
+          .card-body.p-0
+            if recentFiles && recentFiles.length > 0
+              .list-group.list-group-flush
+                each file in recentFiles
+                  .list-group-item
+                    .row.align-items-center
+                      .col-auto
+                        .avatar.avatar-rounded.bg-light
+                          svg.icon(class=getFileIcon(file.mimetype)): use(href=`#tabler-${getFileIcon(file.mimetype)}`)
+                      .col.text-truncate
+                        strong= file.originalName
+                        .text-muted 
+                          | by #{file.uploadedBy.fullName || file.uploadedBy.username}
+                          | · #{file.formattedSize}
+                      .col-auto.text-muted
+                        = moment(file.createdAt).fromNow()
+            else
+              .text-center.py-4
+                .text-muted No recent files
+
+    //- Quick actions
+    .row.g-3.mt-3
+      .col-12
+        .card
+          .card-header
+            h3.card-title Quick Actions
+          .card-body
+            .row.g-3
+              if user.role === 'super_admin' || user.role === 'admin'
+                .col-md-3
+                  a.btn.btn-outline-primary.w-100(href='/admin/users/new')
+                    svg.icon.me-2: use(href='#tabler-user-plus')
+                    | Add User
+                .col-md-3
+                  a.btn.btn-outline-success.w-100(href='/admin/models/new')
+                    svg.icon.me-2: use(href='#tabler-database-plus')
+                    | Create Model
+              .col-md-3
+                button.btn.btn-outline-info.w-100(onclick='document.getElementById("fileUpload").click()')
+                  svg.icon.me-2: use(href='#tabler-upload')
+                  | Upload File
+              .col-md-3
+                a.btn.btn-outline-secondary.w-100(href='/admin/settings')
+                  svg.icon.me-2: use(href='#tabler-settings')
+                  | Settings
+
+  //- Hidden file upload input
+  input#fileUpload(type='file', multiple, style='display: none;', onchange='handleFileUpload(event)')
+
+block scripts
+  script.
+    // Get user role badge class
+    function getRoleBadgeClass(role) {
+      switch(role) {
+        case 'super_admin': return 'badge bg-red';
+        case 'admin': return 'badge bg-orange';
+        case 'manager': return 'badge bg-blue';
+        case 'user': return 'badge bg-green';
+        default: return 'badge bg-secondary';
+      }
+    }
+    
+    // Get user color based on role
+    function getUserColor(role) {
+      switch(role) {
+        case 'super_admin': return '#d63384';
+        case 'admin': return '#fd7e14';
+        case 'manager': return '#0ea5e9';
+        case 'user': return '#20c997';
+        default: return '#6c757d';
+      }
+    }
+    
+    // Get file icon based on mimetype
+    function getFileIcon(mimetype) {
+      if (mimetype.startsWith('image/')) return 'photo';
+      if (mimetype.startsWith('video/')) return 'video';
+      if (mimetype.startsWith('audio/')) return 'music';
+      if (mimetype.includes('pdf')) return 'file-type-pdf';
+      if (mimetype.includes('word')) return 'file-type-doc';
+      if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return 'file-type-xls';
+      if (mimetype.includes('zip') || mimetype.includes('rar')) return 'file-zip';
+      return 'file';
+    }
+    
+    // Handle file upload
+    function handleFileUpload(event) {
+      const files = event.target.files;
+      if (files.length === 0) return;
+      
+      const formData = new FormData();
+      for (let file of files) {
+        formData.append('files', file);
+      }
+      
+      // Show loading state
+      const button = document.querySelector('button[onclick="document.getElementById(\\'fileUpload\\').click()"]');
+      const originalText = button.innerHTML;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+      button.disabled = true;
+      
+      fetch('/api/files/upload-multiple', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Show success message
+          showNotification('Files uploaded successfully!', 'success');
+          // Refresh page after delay
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          showNotification('Upload failed: ' + data.error, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Upload error:', error);
+        showNotification('Upload failed: ' + error.message, 'error');
+      })
+      .finally(() => {
+        // Reset button
+        button.innerHTML = originalText;
+        button.disabled = false;
+        event.target.value = ''; // Clear file input
+      });
+    }
+    
+    // Show notification
+    function showNotification(message, type) {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible position-fixed`;
+      notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      notification.innerHTML = `
+        <div>${message}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 5000);
+    }
+    
+    // Auto-refresh statistics every 30 seconds
+    setInterval(() => {
+      fetch('/api/auth/me', {
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          // Token might be expired, redirect to login
+          window.location.href = '/login';
+        }
+      })
+      .catch(error => {
+        console.error('Auto-refresh error:', error);
+      });
+    }, 30000);

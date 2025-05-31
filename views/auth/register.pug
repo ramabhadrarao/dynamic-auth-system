@@ -1,0 +1,242 @@
+//- File: views/auth/register.pug
+//- Registration page template
+
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title= title || 'Register'
+    
+    // Tabler CSS
+    link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css')
+    
+    style.
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .register-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 500px;
+        width: 100%;
+        padding: 2rem;
+      }
+      
+      .logo {
+        width: 64px;
+        height: 64px;
+        background: #206bc4;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+      
+      .alert {
+        border-radius: 0.5rem;
+      }
+
+  body
+    .container-fluid
+      .row.justify-content-center
+        .col-12.col-md-8.col-lg-6
+          .register-card
+            .text-center
+              .logo DA
+              h1.h3.mb-3 Create your account
+              if error
+                .alert.alert-danger.alert-dismissible(role='alert')
+                  div= error
+                  button.btn-close(type='button', data-bs-dismiss='alert')
+                  
+            form#registerForm
+              .row
+                .col-md-6
+                  .mb-3
+                    label.form-label(for='firstName') First Name
+                    input.form-control(
+                      type='text',
+                      id='firstName',
+                      name='firstName',
+                      placeholder='Enter your first name',
+                      required
+                    )
+                    
+                .col-md-6
+                  .mb-3
+                    label.form-label(for='lastName') Last Name
+                    input.form-control(
+                      type='text',
+                      id='lastName',
+                      name='lastName',
+                      placeholder='Enter your last name',
+                      required
+                    )
+              
+              .mb-3
+                label.form-label(for='username') Username
+                input.form-control(
+                  type='text',
+                  id='username',
+                  name='username',
+                  placeholder='Choose a username',
+                  required
+                )
+                
+              .mb-3
+                label.form-label(for='email') Email Address
+                input.form-control(
+                  type='email',
+                  id='email',
+                  name='email',
+                  placeholder='Enter your email address',
+                  required
+                )
+                
+              .mb-3
+                label.form-label(for='password') Password
+                input.form-control(
+                  type='password',
+                  id='password',
+                  name='password',
+                  placeholder='Create a strong password',
+                  required
+                )
+                small.form-text.text-muted
+                  | Password must contain at least 6 characters with uppercase, lowercase, and number
+                
+              .row
+                .col-md-6
+                  .mb-3
+                    label.form-label(for='department') Department (Optional)
+                    input.form-control(
+                      type='text',
+                      id='department',
+                      name='department',
+                      placeholder='Your department'
+                    )
+                    
+                .col-md-6
+                  .mb-3
+                    label.form-label(for='phone') Phone (Optional)
+                    input.form-control(
+                      type='tel',
+                      id='phone',
+                      name='phone',
+                      placeholder='Your phone number'
+                    )
+                
+              .mb-3
+                .form-check
+                  input.form-check-input(
+                    type='checkbox',
+                    id='agreeTerms',
+                    required
+                  )
+                  label.form-check-label(for='agreeTerms')
+                    | I agree to the 
+                    a(href='#') Terms of Service
+                    |  and 
+                    a(href='#') Privacy Policy
+                  
+              .mb-3
+                button.btn.btn-primary.w-100(type='submit') Create Account
+                
+              hr.my-4
+              
+              .text-center
+                span.text-muted Already have an account? 
+                a(href='/login') Sign in
+
+    // Tabler JS
+    script(src='https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js')
+    
+    script.
+      document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
+        
+        try {
+          const formData = new FormData(this);
+          const data = Object.fromEntries(formData.entries());
+          
+          // Remove checkbox from data
+          delete data.agreeTerms;
+          
+          const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok) {
+            // Store token
+            localStorage.setItem('authToken', result.accessToken);
+            
+            // Show success message
+            showAlert('Account created successfully! Redirecting...', 'success');
+            
+            // Redirect after short delay
+            setTimeout(() => {
+              window.location.href = '/admin/dashboard';
+            }, 1000);
+          } else {
+            if (result.errors && Array.isArray(result.errors)) {
+              // Show validation errors
+              const errorMessages = result.errors.map(err => err.msg).join('<br>');
+              showAlert(errorMessages, 'danger');
+            } else {
+              showAlert(result.error || 'Registration failed', 'danger');
+            }
+          }
+        } catch (error) {
+          console.error('Registration error:', error);
+          showAlert('Network error. Please try again.', 'danger');
+        } finally {
+          // Reset button
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      });
+      
+      function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible`;
+        alert.innerHTML = `
+          <div>${message}</div>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert before form
+        const form = document.getElementById('registerForm');
+        form.parentNode.insertBefore(alert, form);
+      }
+      
+      // Auto-focus first name field
+      document.getElementById('firstName').focus();

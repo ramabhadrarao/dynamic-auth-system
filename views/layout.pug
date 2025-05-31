@@ -1,0 +1,346 @@
+//- File: views/layout.pug
+//- Main layout template with Tabler UI
+
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title= title || 'Dynamic Auth System'
+    
+    // Tabler CSS
+    link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css')
+    link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/@tabler/icons@latest/icons-sprite.svg')
+    
+    // Custom CSS
+    style.
+      .sidebar {
+        width: 280px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        background: #fff;
+        border-right: 1px solid #e6e7e9;
+        z-index: 1000;
+        overflow-y: auto;
+      }
+      
+      .main-content {
+        margin-left: 280px;
+        min-height: 100vh;
+        background: #f8f9fa;
+      }
+      
+      .navbar-brand img {
+        height: 32px;
+      }
+      
+      .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: #667382;
+        border-radius: 0.375rem;
+        margin: 0.125rem 0.5rem;
+        text-decoration: none;
+      }
+      
+      .nav-link:hover {
+        background: #f1f3f4;
+        color: #1e293b;
+      }
+      
+      .nav-link.active {
+        background: #206bc4;
+        color: #fff;
+      }
+      
+      .nav-link svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-right: 0.75rem;
+      }
+      
+      .user-avatar {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: #206bc4;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+      
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+        
+        .sidebar.show {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 0;
+        }
+      }
+
+  body
+    .page
+      // Sidebar
+      aside.sidebar
+        .sidebar-brand.p-3
+          a.navbar-brand(href='/admin')
+            img(src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzIwNmJjNCIvPgo8cGF0aCBkPSJNMTYgOEwxMiAxNkgxNkwyMCAxNkwxNiA4WiIgZmlsbD0id2hpdGUiLz4KPHN2Zz4K', alt='Logo')
+            span.ms-2 Dynamic System
+            
+        nav.mt-4
+          if user
+            ul.nav.nav-pills.flex-column
+              li.nav-item
+                a.nav-link(href='/admin/dashboard', class=currentPath === '/admin/dashboard' ? 'active' : '')
+                  svg: use(href='#tabler-dashboard')
+                  | Dashboard
+                  
+              li.nav-item
+                a.nav-link(href='/admin/users', class=currentPath === '/admin/users' ? 'active' : '')
+                  svg: use(href='#tabler-users')
+                  | Users
+                  
+              if user.role === 'super_admin' || user.role === 'admin'
+                li.nav-item
+                  a.nav-link(href='/admin/models', class=currentPath === '/admin/models' ? 'active' : '')
+                    svg: use(href='#tabler-database')
+                    | Models
+                    
+                li.nav-item
+                  a.nav-link(href='/admin/permissions', class=currentPath === '/admin/permissions' ? 'active' : '')
+                    svg: use(href='#tabler-shield-check')
+                    | Permissions
+                    
+              // Dynamic model navigation
+              if dynamicModels
+                hr.my-2
+                h6.sidebar-heading.px-3.mt-4.mb-1.text-muted.text-uppercase.fs-6 Models
+                each model in dynamicModels
+                  li.nav-item
+                    a.nav-link(href=`/admin/${model.name.toLowerCase()}`, class=currentPath.includes(`/${model.name.toLowerCase()}`) ? 'active' : '')
+                      svg: use(href=`#tabler-${model.ui.icon || 'file'}`)
+                      | #{model.displayName}
+                      
+              hr.my-2
+              li.nav-item
+                a.nav-link(href='/admin/files', class=currentPath === '/admin/files' ? 'active' : '')
+                  svg: use(href='#tabler-files')
+                  | Files
+                  
+              li.nav-item
+                a.nav-link(href='/admin/settings', class=currentPath === '/admin/settings' ? 'active' : '')
+                  svg: use(href='#tabler-settings')
+                  | Settings
+
+      // Main content
+      .main-content
+        // Top navbar
+        header.navbar.navbar-expand-md.navbar-light.d-print-none
+          .container-fluid
+            button.navbar-toggler.d-md-none(type='button', onclick='toggleSidebar()')
+              span.navbar-toggler-icon
+              
+            .navbar-nav.flex-row.order-md-last
+              if user
+                .nav-item.dropdown
+                  a.nav-link.d-flex.lh-1.text-reset.p-0(href='#', data-bs-toggle='dropdown')
+                    .user-avatar= user.firstName.charAt(0) + user.lastName.charAt(0)
+                    .d-none.d-xl-block.ps-2
+                      div= user.fullName
+                      div.mt-1.small.text-muted= user.role
+                      
+                  .dropdown-menu.dropdown-menu-end.dropdown-menu-arrow
+                    a.dropdown-item(href='/admin/profile')
+                      svg.icon.me-2: use(href='#tabler-user')
+                      | Profile
+                    a.dropdown-item(href='/admin/settings')
+                      svg.icon.me-2: use(href='#tabler-settings')
+                      | Settings
+                    .dropdown-divider
+                    a.dropdown-item(href='#', onclick='logout()')
+                      svg.icon.me-2: use(href='#tabler-logout')
+                      | Logout
+              else
+                a.btn.btn-primary(href='/login') Login
+
+        // Page content
+        .page-wrapper
+          .page-header.d-print-none
+            .container-fluid
+              .row.g-2.align-items-center
+                .col
+                  h2.page-title= title
+                  if subtitle
+                    .text-muted= subtitle
+                .col-auto.ms-auto.d-print-none
+                  block actions
+
+          .page-body
+            .container-fluid
+              block content
+
+        // Footer
+        footer.footer.footer-transparent.d-print-none
+          .container-fluid
+            .row.text-center.align-items-center.flex-row-reverse
+              .col-lg-auto.ms-lg-auto
+                ul.list-inline.list-inline-dots.mb-0
+                  li.list-inline-item
+                    a.link-secondary(href='/admin/help') Help
+                  li.list-inline-item
+                    a.link-secondary(href='/admin/docs') Documentation
+              .col-12.col-lg-auto.mt-3.mt-lg-0
+                p.text-muted.mb-0 © 2024 Dynamic Auth System. Built with 
+                  a(href='https://tabler.io/') Tabler
+
+    // Tabler Icons SVG
+    svg(style='display: none;')
+      symbol#tabler-dashboard(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z')
+      symbol#tabler-users(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z')
+        path(d='M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2')
+        path(d='M16 3.13a4 4 0 0 1 0 7.75')
+        path(d='M21 21v-2a4 4 0 0 0-3-3.85')
+      symbol#tabler-database(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        ellipse(cx='12', cy='5', rx='9', ry='3')
+        path(d='M3 5v14a9 3 0 0 0 18 0V5')
+        path(d='M3 12a9 3 0 0 0 18 0')
+      symbol#tabler-shield-check(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M12 3a4 4 0 0 0-4 4v2a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2V7a4 4 0 0 0-4-4z')
+        path(d='M9 12l2 2 4-4')
+      symbol#tabler-file(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z')
+        polyline(points='14,2 14,8 20,8')
+      symbol#tabler-files(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1V6H4c-.4 0-.8.2-1.1.5C2.6 6.8 2.4 7.2 2.4 7.6v11.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V16h3c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V4.6c0-.4-.2-.8-.5-1.1-.3-.3-.7-.5-1.1-.5z')
+      symbol#tabler-settings(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        circle(cx='12', cy='12', r='3')
+        path(d='M12 1v6m0 10v6m11-7h-6m-10 0H1m15.5-6.5l-4.24 4.24m-6.36 0L1.5 6.5m0 11L5.74 13.26m6.36 0L16.5 17.5')
+      symbol#tabler-user(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2')
+        circle(cx='12', cy='7', r='4')
+      symbol#tabler-logout(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4')
+        polyline(points='16,17 21,12 16,7')
+        line(x1='21', y1='12', x2='9', y2='12')
+
+    // Tabler JS
+    script(src='https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js')
+    
+    // Custom JavaScript
+    script.
+      // Store authentication token
+      let token = localStorage.getItem('authToken');
+      
+      // Check if we have a token when accessing admin pages
+      if (window.location.pathname.startsWith('/admin') && !token) {
+        window.location.href = '/login';
+      }
+      
+      // Toggle sidebar on mobile
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('show');
+      }
+      
+      // Logout function
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + (token || ''),
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(() => {
+            localStorage.removeItem('authToken');
+            window.location.href = '/login';
+          })
+          .catch(error => {
+            console.error('Logout error:', error);
+            // Force logout even if request fails
+            localStorage.removeItem('authToken');
+            window.location.href = '/login';
+          });
+        }
+      }
+      
+      // Auto-refresh token
+      function refreshToken() {
+        fetch('/api/auth/refresh', {
+          method: 'POST',
+          credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.accessToken) {
+            localStorage.setItem('authToken', data.accessToken);
+            token = data.accessToken;
+          }
+        })
+        .catch(error => {
+          console.error('Token refresh failed:', error);
+          // Redirect to login if refresh fails
+          if (window.location.pathname.startsWith('/admin')) {
+            window.location.href = '/login';
+          }
+        });
+      }
+      
+      // Refresh token every 25 minutes
+      setInterval(refreshToken, 25 * 60 * 1000);
+      
+      // API helper function
+      window.api = {
+        get: (url) => fetch(url, {
+          headers: {
+            'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '')
+          }
+        }),
+        post: (url, data) => fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '')
+          },
+          body: JSON.stringify(data)
+        }),
+        put: (url, data) => fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '')
+          },
+          body: JSON.stringify(data)
+        }),
+        delete: (url) => fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '')
+          }
+        })
+      };
+      
+      // Handle API errors globally
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && event.reason.status === 401) {
+          localStorage.removeItem('authToken');
+          window.location.href = '/login';
+        }
+      });
+
+    block scripts

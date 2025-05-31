@@ -1,0 +1,89 @@
+//- File: views/product/form.pug
+//- Auto-generated form view for Products
+
+extends ../layout
+
+block content
+  .container-fluid
+    .row
+      .col-12
+        .card
+          .card-header
+            h3.card-title
+              i.ti-package.me-2
+              | #{isEdit ? 'Edit' : 'Create'} Products
+              
+          .card-body
+            form#recordForm
+              .row.mb-3
+                .col-md-6
+                  label.form-label(for='name') Product Name *
+                  input.form-control(type='text', id='name', name='name', placeholder='Enter product name', required)
+              .row.mb-3
+                .col-md-6
+                  label.form-label(for='description') Description
+                  textarea.form-control(id='description', name='description', placeholder='Enter product description', )
+              .row.mb-3
+                .col-md-6
+                  label.form-label(for='price') Price *
+                  input.form-control(type='number', id='price', name='price', placeholder='Enter price', required)
+              .row.mb-3
+                .col-md-6
+                  label.form-label(for='category') Category *
+                  select.form-control(id='category', name='category', required)
+                    option(value='Electronics') Electronics
+                    option(value='Clothing') Clothing
+                    option(value='Books') Books
+                    option(value='Home & Garden') Home & Garden
+                    option(value='Sports') Sports
+              .row.mb-3
+                .col-md-6
+                  label.form-label(for='inStock') In Stock
+                  .form-check
+                    input.form-check-input(type='checkbox', id='inStock', name='inStock')
+                    label.form-check-label(for='inStock') In Stock
+              .row.mb-3
+                .col-md-6
+                  label.form-label(for='sku') SKU *
+                  input.form-control(type='text', id='sku', name='sku', placeholder='Enter SKU', required)
+              
+              .row.mt-3
+                .col-12
+                  button.btn.btn-primary(type='submit')
+                    i.ti-check.me-1
+                    | #{isEdit ? 'Update' : 'Create'}
+                  a.btn.btn-secondary.ms-2(href='/admin/product')
+                    i.ti-arrow-left.me-1
+                    | Back to List
+
+block scripts
+  script.
+    document.getElementById('recordForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      
+      const method = isEdit ? 'PUT' : 'POST';
+      const url = isEdit ? '/api/dynamic/Product/' + recordId : '/api/dynamic/Product';
+      
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          window.location.href = '/admin/product';
+        }
+      })
+      .catch(error => {
+        alert('Error: ' + error.message);
+      });
+    });

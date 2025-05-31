@@ -1,0 +1,91 @@
+//- File: views/product/list.pug
+//- Auto-generated list view for Products
+
+extends ../layout
+
+block content
+  .container-fluid
+    .row
+      .col-12
+        .card
+          .card-header.d-flex.justify-content-between.align-items-center
+            h3.card-title
+              i.ti-package.me-2
+              | Products
+            .btn-group
+              a.btn.btn-primary(href='/admin/product/new')
+                i.ti-plus.me-1
+                | Add New
+              
+          .card-body
+            //- Search and filters
+            .row.mb-3
+              .col-md-6
+                .input-group
+                  input.form-control(type='text', placeholder='Search...', name='search')
+                  button.btn.btn-outline-secondary(type='button')
+                    i.ti-search
+                    
+            //- Data table
+            .table-responsive
+              table.table.table-striped
+                thead
+                  tr
+                    th Product Name
+                    th Price
+                    th Category
+                    th In Stock
+                    th SKU
+                    th Actions
+                tbody
+                  each record in records
+                    tr
+                      td= record.name
+                      td= record.price
+                      td= record.category
+                      td= record.inStock
+                      td= record.sku
+                      td
+                        .btn-group
+                          a.btn.btn-sm.btn-outline-primary(href='/admin/product/' + record._id)
+                            i.ti-eye
+                          a.btn.btn-sm.btn-outline-secondary(href='/admin/product/' + record._id + '/edit')
+                            i.ti-edit
+                          button.btn.btn-sm.btn-outline-danger(onclick='deleteRecord("' + record._id + '")')
+                            i.ti-trash
+                            
+            //- Pagination
+            if pagination && pagination.pages > 1
+              nav
+                ul.pagination.justify-content-center
+                  li.page-item(class=pagination.page <= 1 ? 'disabled' : '')
+                    a.page-link(href='?page=' + (pagination.page - 1)) Previous
+                  - for (let i = 1; i <= pagination.pages; i++)
+                    li.page-item(class=pagination.page === i ? 'active' : '')
+                      a.page-link(href='?page=' + i)= i
+                  li.page-item(class=pagination.page >= pagination.pages ? 'disabled' : '')
+                    a.page-link(href='?page=' + (pagination.page + 1)) Next
+
+block scripts
+  script.
+    function deleteRecord(id) {
+      if (confirm('Are you sure you want to delete this record?')) {
+        fetch('/api/dynamic/Product/' + id, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            alert('Error: ' + data.error);
+          } else {
+            location.reload();
+          }
+        })
+        .catch(error => {
+          alert('Error: ' + error.message);
+        });
+      }
+    }

@@ -1,0 +1,393 @@
+//- File: views/home.pug
+//- Public home page
+
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title= title || 'Dynamic Auth System'
+    
+    // Tabler CSS
+    link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css')
+    
+    style.
+      .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        color: white;
+      }
+      
+      .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 1rem;
+      }
+      
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      
+      .feature-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      .stats-section {
+        background: #f8f9fa;
+        padding: 4rem 0;
+      }
+      
+      .navbar-brand {
+        font-weight: bold;
+        font-size: 1.5rem;
+      }
+
+  body
+    // Navigation
+    nav.navbar.navbar-expand-lg.navbar-dark.position-absolute.w-100(style='z-index: 1000;')
+      .container
+        a.navbar-brand(href='/') 
+          | 🚀 Dynamic Auth System
+        
+        button.navbar-toggler(type='button', data-bs-toggle='collapse', data-bs-target='#navbarNav')
+          span.navbar-toggler-icon
+          
+        .collapse.navbar-collapse#navbarNav
+          .navbar-nav.ms-auto
+            a.nav-link(href='/about') About
+            a.nav-link(href='/docs') Documentation
+            a.nav-link(href='/help') Help
+            if user
+              a.nav-link(href='/admin') Dashboard
+              a.nav-link(href='#', onclick='logout()') Logout
+            else
+              a.nav-link(href='/login') Login
+              a.nav-link.btn.btn-outline-light.ms-2(href='/register') Get Started
+
+    // Hero Section
+    section.hero-section
+      .container
+        .row.align-items-center
+          .col-lg-6
+            h1.display-4.fw-bold.mb-4 Build Secure Apps with Zero Code
+            p.lead.mb-4 
+              | Create dynamic data models, manage users, and implement enterprise-grade 
+              | authentication and authorization without writing a single line of code.
+            .d-flex.gap-3
+              if user
+                a.btn.btn-light.btn-lg(href='/admin')
+                  | Go to Dashboard
+                  svg.icon.ms-2: use(href='#tabler-arrow-right')
+              else
+                a.btn.btn-light.btn-lg(href='/register')
+                  | Start Building
+                  svg.icon.ms-2: use(href='#tabler-rocket')
+                a.btn.btn-outline-light.btn-lg(href='/login') Sign In
+                
+          .col-lg-6.text-center
+            .card.shadow-lg.border-0.bg-white.text-dark.p-4
+              h3.h4.mb-3 Quick Demo
+              p.text-muted Create your first dynamic model in under 60 seconds
+              .row.text-center.g-3
+                .col-4
+                  .feature-icon.mx-auto
+                    | 1
+                  small Define Fields
+                .col-4
+                  .feature-icon.mx-auto
+                    | 2
+                  small Set Permissions
+                .col-4
+                  .feature-icon.mx-auto
+                    | 3
+                  small Go Live!
+
+    // Features Section
+    section.py-5
+      .container
+        .row.text-center.mb-5
+          .col-12
+            h2.display-5.fw-bold Core Features
+            p.lead.text-muted Everything you need to build secure, scalable applications
+            
+        .row.g-4
+          .col-md-4
+            .card.feature-card.h-100.text-center.p-4
+              .feature-icon.mx-auto
+                svg.icon: use(href='#tabler-shield-check')
+              h4 Enterprise Security
+              p.text-muted 
+                | JWT authentication, RBAC/ABAC authorization, rate limiting, 
+                | and comprehensive security headers out of the box.
+                
+          .col-md-4
+            .card.feature-card.h-100.text-center.p-4
+              .feature-icon.mx-auto
+                svg.icon: use(href='#tabler-database')
+              h4 Dynamic Models
+              p.text-muted 
+                | Create data models through visual interface. Auto-generated APIs, 
+                | admin interface, and validation rules.
+                
+          .col-md-4
+            .card.feature-card.h-100.text-center.p-4
+              .feature-icon.mx-auto
+                svg.icon: use(href='#tabler-users')
+              h4 User Management
+              p.text-muted 
+                | Complete user lifecycle management with roles, permissions, 
+                | and attribute-based access control.
+                
+          .col-md-4
+            .card.feature-card.h-100.text-center.p-4
+              .feature-icon.mx-auto
+                svg.icon: use(href='#tabler-file-upload')
+              h4 File Management
+              p.text-muted 
+                | Secure file upload with metadata, categorization, and 
+                | permission-based access control.
+                
+          .col-md-4
+            .card.feature-card.h-100.text-center.p-4
+              .feature-icon.mx-auto
+                svg.icon: use(href='#tabler-api')
+              h4 RESTful APIs
+              p.text-muted 
+                | Automatically generated REST endpoints with OpenAPI documentation 
+                | and comprehensive CRUD operations.
+                
+          .col-md-4
+            .card.feature-card.h-100.text-center.p-4
+              .feature-icon.mx-auto
+                svg.icon: use(href='#tabler-palette')
+              h4 Modern UI
+              p.text-muted 
+                | Beautiful, responsive admin interface built with Tabler UI. 
+                | Mobile-friendly and highly customizable.
+
+    // Statistics Section
+    section.stats-section
+      .container
+        .row.text-center
+          .col-md-3
+            h3.display-6.fw-bold.text-primary 100%
+            p.text-muted Secure by Default
+            
+          .col-md-3
+            h3.display-6.fw-bold.text-success 0
+            p.text-muted Lines of Code Required
+            
+          .col-md-3
+            h3.display-6.fw-bold.text-warning < 5min
+            p.text-muted Setup Time
+            
+          .col-md-3
+            h3.display-6.fw-bold.text-info ∞
+            p.text-muted Scalability
+
+    // Technology Stack
+    section.py-5
+      .container
+        .row.text-center.mb-5
+          .col-12
+            h2.display-5.fw-bold Built on Proven Technologies
+            p.lead.text-muted Industry-standard tools and frameworks
+            
+        .row.g-4.justify-content-center
+          .col-md-2.col-6.text-center
+            .card.border-0.p-3
+              h5 Node.js
+              small.text-muted Runtime
+              
+          .col-md-2.col-6.text-center
+            .card.border-0.p-3
+              h5 Express
+              small.text-muted Framework
+              
+          .col-md-2.col-6.text-center
+            .card.border-0.p-3
+              h5 MongoDB
+              small.text-muted Database
+              
+          .col-md-2.col-6.text-center
+            .card.border-0.p-3
+              h5 Tabler UI
+              small.text-muted Interface
+              
+          .col-md-2.col-6.text-center
+            .card.border-0.p-3
+              h5 JWT
+              small.text-muted Auth Tokens
+
+    // Call to Action
+    section.py-5.bg-primary.text-white
+      .container.text-center
+        .row
+          .col-lg-8.mx-auto
+            h2.display-5.fw-bold Ready to Get Started?
+            p.lead.mb-4 
+              | Join thousands of developers building secure applications with our platform.
+              | Start your free trial today and see the difference.
+            if user
+              a.btn.btn-light.btn-lg(href='/admin')
+                | Open Dashboard
+                svg.icon.ms-2: use(href='#tabler-external-link')
+            else
+              .d-flex.gap-3.justify-content-center
+                a.btn.btn-light.btn-lg(href='/register')
+                  | Create Account
+                  svg.icon.ms-2: use(href='#tabler-user-plus')
+                a.btn.btn-outline-light.btn-lg(href='/docs')
+                  | View Documentation
+                  svg.icon.ms-2: use(href='#tabler-book')
+
+    // Footer
+    footer.py-4.bg-dark.text-white
+      .container
+        .row
+          .col-md-6
+            h5 Dynamic Auth System
+            p.text-muted 
+              | Build secure, scalable applications with zero-code dynamic models 
+              | and enterprise-grade authentication.
+              
+          .col-md-3
+            h6 Links
+            ul.list-unstyled
+              li: a.text-muted(href='/about') About
+              li: a.text-muted(href='/docs') Documentation
+              li: a.text-muted(href='/help') Help & Support
+              li: a.text-muted(href='#') API Reference
+              
+          .col-md-3
+            h6 Legal
+            ul.list-unstyled
+              li: a.text-muted(href='#') Privacy Policy
+              li: a.text-muted(href='#') Terms of Service
+              li: a.text-muted(href='#') Security
+              li: a.text-muted(href='#') License
+              
+        hr.my-3
+        .row.align-items-center
+          .col-md-6
+            p.mb-0.text-muted © 2024 Dynamic Auth System. All rights reserved.
+          .col-md-6.text-md-end
+            p.mb-0.text-muted Built with ❤️ for developers
+
+    // Tabler Icons SVG
+    svg(style='display: none;')
+      symbol#tabler-arrow-right(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M5 12h14m-7-7l7 7-7 7')
+      symbol#tabler-rocket(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M4 13a8 8 0 0 1 7 7 6 6 0 0 0 3-5 9 9 0 0 0 6-8 3 3 0 0 0-3-3 9 9 0 0 0-8 6 6 6 0 0 0-5 3')
+        path(d='M7 14a6 6 0 0 0-3 6 6 6 0 0 0 6-3m4-8a1 1 0 1 0-2 0 1 1 0 0 0 2 0')
+      symbol#tabler-shield-check(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M12 3a4 4 0 0 0-4 4v2a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2V7a4 4 0 0 0-4-4z')
+        path(d='M9 12l2 2 4-4')
+      symbol#tabler-database(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        ellipse(cx='12', cy='5', rx='9', ry='3')
+        path(d='M3 5v14a9 3 0 0 0 18 0V5')
+        path(d='M3 12a9 3 0 0 0 18 0')
+      symbol#tabler-users(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z')
+        path(d='M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2')
+        path(d='M16 3.13a4 4 0 0 1 0 7.75')
+        path(d='M21 21v-2a4 4 0 0 0-3-3.85')
+      symbol#tabler-file-upload(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z')
+        polyline(points='14,2 14,8 20,8')
+        line(x1='12', y1='18', x2='12', y2='12')
+        polyline(points='9,15 12,12 15,15')
+      symbol#tabler-api(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M4 13h5l3-3-3-3H4v6zM15 11l3 3-3 3')
+      symbol#tabler-palette(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M12 21a9 9 0 1 1 0-18 9 8 0 0 1 9 8 4.5 4 0 0 1-4.5 4H14a2 2 0 0 0-1 3.75A1.3 1.3 0 0 1 12 21')
+        circle(cx='7.5', cy='10.5', r='.5')
+        circle(cx='12', cy='7.5', r='.5')
+        circle(cx='16.5', cy='10.5', r='.5')
+      symbol#tabler-external-link(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6')
+        polyline(points='15,3 21,3 21,9')
+        line(x1='10', y1='14', x2='21', y2='3')
+      symbol#tabler-user-plus(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2')
+        circle(cx='12', cy='7', r='4')
+        line(x1='19', y1='8', x2='19', y2='14')
+        line(x1='22', y1='11', x2='16', y2='11')
+      symbol#tabler-book(viewBox='0 0 24 24', fill='none', stroke='currentColor', stroke-width='2')
+        path(d='M3 19a9 9 0 0 1 9 0 9 9 0 0 1 9 0')
+        path(d='M3 6a9 9 0 0 1 9 0 9 9 0 0 1 9 0')
+        line(x1='3', y1='6', x2='3', y2='19')
+        line(x1='12', y1='6', x2='12', y2='19')
+        line(x1='21', y1='6', x2='21', y2='19')
+
+    // Tabler JS
+    script(src='https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js')
+    
+    script.
+      // Logout function
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(() => {
+            localStorage.removeItem('authToken');
+            window.location.href = '/';
+          })
+          .catch(error => {
+            console.error('Logout error:', error);
+            localStorage.removeItem('authToken');
+            window.location.href = '/';
+          });
+        }
+      }
+      
+      // Smooth scrolling for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+          });
+        });
+      });
+      
+      // Add animation on scroll
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }
+        });
+      }, observerOptions);
+      
+      // Observe feature cards
+      document.querySelectorAll('.feature-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+      });

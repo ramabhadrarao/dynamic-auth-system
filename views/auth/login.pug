@@ -1,0 +1,181 @@
+//- File: views/auth/login.pug
+//- Login page template
+
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title= title || 'Login'
+    
+    // Tabler CSS
+    link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css')
+    
+    style.
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .login-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 400px;
+        width: 100%;
+        padding: 2rem;
+      }
+      
+      .logo {
+        width: 64px;
+        height: 64px;
+        background: #206bc4;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+      
+      .alert {
+        border-radius: 0.5rem;
+      }
+
+  body
+    .container-fluid
+      .row.justify-content-center
+        .col-12.col-md-6.col-lg-4
+          .login-card
+            .text-center
+              .logo DA
+              h1.h3.mb-3 Sign in to your account
+              if error
+                .alert.alert-danger.alert-dismissible(role='alert')
+                  div= error
+                  button.btn-close(type='button', data-bs-dismiss='alert')
+                  
+            form#loginForm
+              .mb-3
+                label.form-label(for='username') Email or Username
+                input.form-control(
+                  type='text',
+                  id='username',
+                  name='username',
+                  placeholder='Enter your email or username',
+                  required
+                )
+                
+              .mb-3
+                label.form-label(for='password') Password
+                input.form-control(
+                  type='password',
+                  id='password',
+                  name='password',
+                  placeholder='Enter your password',
+                  required
+                )
+                
+              .mb-3
+                .form-check
+                  input.form-check-input(
+                    type='checkbox',
+                    id='rememberMe',
+                    name='rememberMe'
+                  )
+                  label.form-check-label(for='rememberMe') Remember me
+                  
+              .mb-3
+                button.btn.btn-primary.w-100(type='submit') Sign in
+                
+              .text-center.mt-3
+                a.text-muted(href='/forgot-password') Forgot your password?
+                
+              hr.my-4
+              
+              .text-center
+                span.text-muted Don't have an account? 
+                a(href='/register') Sign up
+
+    // Tabler JS
+    script(src='https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js')
+    
+    script.
+      document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
+        
+        try {
+          const formData = new FormData(this);
+          const data = Object.fromEntries(formData.entries());
+          
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok && result.accessToken) {
+            // Store token first
+            localStorage.setItem('authToken', result.accessToken);
+            
+            // Show success message
+            showAlert('Login successful! Redirecting...', 'success');
+            
+            // Wait a moment for token to be stored, then redirect
+            setTimeout(() => {
+              window.location.href = '/admin/dashboard';
+            }, 500);
+          } else {
+            showAlert(result.error || 'Login failed', 'danger');
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          showAlert('Network error. Please try again.', 'danger');
+        } finally {
+          // Reset button
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      });
+      
+      function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible`;
+        alert.innerHTML = `
+          <div>${message}</div>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert before form
+        const form = document.getElementById('loginForm');
+        form.parentNode.insertBefore(alert, form);
+      }
+      
+      // Check if already logged in
+      if (localStorage.getItem('authToken')) {
+        window.location.href = '/admin/dashboard';
+      }
+      
+      // Auto-focus username field
+      document.getElementById('username').focus();
