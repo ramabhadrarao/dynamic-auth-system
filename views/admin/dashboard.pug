@@ -113,12 +113,12 @@ block content
                   .list-group-item
                     .row.align-items-center
                       .col-auto
-                        .avatar.avatar-rounded(style=`background-color: ${getUserColor(user.role)}`)= user.firstName.charAt(0) + user.lastName.charAt(0)
+                        .avatar.avatar-rounded(style=user.role === 'super_admin' ? 'background-color: #d63384' : user.role === 'admin' ? 'background-color: #fd7e14' : user.role === 'manager' ? 'background-color: #0ea5e9' : 'background-color: #20c997')= user.firstName.charAt(0) + user.lastName.charAt(0)
                       .col.text-truncate
                         strong= user.fullName
                         .text-muted= user.email
                       .col-auto
-                        .badge(class=getRoleBadgeClass(user.role))= user.role
+                        .badge(class=user.role === 'super_admin' ? 'bg-danger' : user.role === 'admin' ? 'bg-warning' : user.role === 'manager' ? 'bg-info' : 'bg-success')= user.role
                       .col-auto.text-muted
                         = moment(user.createdAt).fromNow()
             else
@@ -140,7 +140,16 @@ block content
                     .row.align-items-center
                       .col-auto
                         .avatar.avatar-rounded.bg-light
-                          svg.icon(class=getFileIcon(file.mimetype)): use(href=`#tabler-${getFileIcon(file.mimetype)}`)
+                          if file.mimetype.startsWith('image/')
+                            svg.icon: use(href='#tabler-photo')
+                          else if file.mimetype.startsWith('video/')
+                            svg.icon: use(href='#tabler-video')
+                          else if file.mimetype.startsWith('audio/')
+                            svg.icon: use(href='#tabler-music')
+                          else if file.mimetype.includes('pdf')
+                            svg.icon: use(href='#tabler-file-text')
+                          else
+                            svg.icon: use(href='#tabler-file')
                       .col.text-truncate
                         strong= file.originalName
                         .text-muted 

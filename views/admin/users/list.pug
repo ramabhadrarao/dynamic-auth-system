@@ -1,0 +1,188 @@
+//- File: views/admin/users/list.pug
+//- Users list view
+
+extends ../../layout
+
+block content
+  .container-fluid
+    .row
+      .col-12
+        .card
+          .card-header.d-flex.justify-content-between.align-items-center
+            h3.card-title
+              svg.icon.me-2: use(href='#tabler-users')
+              | Users
+            .btn-group
+              a.btn.btn-primary(href='/admin/users/new')
+                svg.icon.me-1: use(href='#tabler-user-plus')
+                | Add User
+                
+          .card-body
+            //- Search and filters
+            .row.mb-3
+              .col-md-6
+                .input-group
+                  input.form-control(type='text', placeholder='Search users...', name='search', value=filters.search || '')
+                  button.btn.btn-outline-secondary(type='button', onclick='searchUsers()')
+                    svg.icon: use(href='#tabler-search')
+              .col-md-3
+                select.form-select(name='role', onchange='filterUsers()')
+                  option(value='') All Roles
+                  option(value='super_admin', selected=filters.role === 'super_admin') Super Admin
+                  option(value='admin', selected=filters.role === 'admin') Admin
+                  option(value='manager', selected=filters.role === 'manager') Manager
+                  option(value='user', selected=filters.role === 'user') User
+                  
+            //- Users table
+            .table-responsive
+              table.table.table-striped
+                thead
+                  tr
+                    th Avatar
+                    th Name
+                    th Email
+                    th Role
+                    th Department
+                    th Status
+                    th Last Login
+                    th Actions
+                tbody
+                  if users && users.length > 0
+                    each user in users
+                      tr
+                        td
+                          .avatar.avatar-rounded(style=`background-color: ${getUserColor(user.role)}`)
+                            = user.firstName.charAt(0) + user.lastName.charAt(0)
+                        td
+                          strong= user.fullName
+                          br
+                          small.text-muted= user.username
+                        td= user.email
+                        td
+                          span.badge(class=getRoleBadgeClass(user.role))= user.role
+                        td= user.department || '-'
+                        td
+                          if user.isActive
+                            span.badge.bg-success Active
+                          else
+                            span.badge.bg-danger Inactive
+                        td
+                          if user.lastLogin
+                            = moment(user.lastLogin).format('MMM DD, YYYY')
+                            br
+                            small.text-muted= moment(user.lastLogin).fromNow()
+                          else
+                            span.text-muted Never
+                        td
+                          .btn-group
+                            a.btn.btn-sm.btn-outline-primary(href=`/admin/users/${user._id}`)
+                              svg.icon: use(href='#tabler-eye')
+                            a.btn.btn-sm.btn-outline-secondary(href=`/admin/users/${user._id}/edit`)
+                              svg.icon: use(href='#tabler-edit')
+                            if user._id.toString() !== currentUser._id.toString()
+                              button.btn.btn-sm.btn-outline-danger(onclick=`deleteUser('${user._id}', '${user.fullName}')`)
+                                svg.icon: use(href='#tabler-trash')
+                  else
+                    tr
+                      td.text-center(colspan='8')
+                        .py-4
+                          svg.icon.icon-lg.text-muted.mb-2: use(href='#tabler-users')
+                          br
+                          span.text-muted No users found
+                          
+            //- Pagination
+            if pagination && pagination.pages > 1
+              nav.mt-3
+                ul.pagination.justify-content-center
+                  li.page-item(class=pagination.page <= 1 ? 'disabled' : '')
+                    a.page-link(href=`?page=${pagination.page - 1}&${new URLSearchParams(filters).toString()}`) Previous
+                  - for (let i = 1; i <= Math.min(pagination.pages, 10); i++)
+                    li.page-item(class=pagination.page === i ? 'active' : '')
+                      a.page-link(href=`?page=${i}&${new URLSearchParams(filters).toString()}`)= i
+                  li.page-item(class=pagination.page >= pagination.pages ? 'disabled' : '')
+                    a.page-link(href=`?page=${pagination.page + 1}&${new URLSearchParams(filters).toString()}`) Next
+
+block scripts
+  script.
+    function getUserColor(role) {
+      switch(role) {
+        case 'super_admin': return '#d63384';
+        case 'admin': return '#fd7e14';
+        case 'manager': return '#0ea5e9';
+        case 'user': return '#20c997';
+        default: return '#6c757d';
+      }
+    }
+    
+    function getRoleBadgeClass(role) {
+      switch(role) {
+        case 'super_admin': return 'bg-danger';
+        case 'admin': return 'bg-warning';
+        case 'manager': return 'bg-info';
+        case 'user': return 'bg-success';
+        default: return 'bg-secondary';
+      }
+    }
+    
+    function searchUsers() {
+      const search = document.querySelector('input[name="search"]').value;
+      const role = document.querySelector('select[name="role"]').value;
+      
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (role) params.set('role', role);
+      
+      window.location.href = '?' + params.toString();
+    }
+    
+    function filterUsers() {
+      searchUsers();
+    }
+    
+    function deleteUser(userId, userName) {
+      if (confirm(`Are you sure you want to delete user "${userName}"?`)) {
+        fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showNotification('User deleted successfully', 'success');
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            showNotification('Error: ' + data.error, 'error');
+          }
+        })
+        .catch(error => {
+          showNotification('Error: ' + error.message, 'error');
+        });
+      }
+    }
+    
+    function showNotification(message, type) {
+      const notification = document.createElement('div');
+      notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible position-fixed`;
+      notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      notification.innerHTML = `
+        <div>${message}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 5000);
+    }
+    
+    // Search on Enter key
+    document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchUsers();
+      }
+    });

@@ -1,0 +1,103 @@
+//- File: views/admin/models/list.pug
+//- Models list view
+
+extends ../../layout
+
+block content
+  .container-fluid
+    .row
+      .col-12
+        .card
+          .card-header.d-flex.justify-content-between.align-items-center
+            h3.card-title
+              svg.icon.me-2: use(href='#tabler-database')
+              | Dynamic Models
+            .btn-group
+              a.btn.btn-primary(href='/admin/models/new')
+                svg.icon.me-1: use(href='#tabler-plus')
+                | Create Model
+                
+          .card-body
+            //- Models grid
+            if models && models.length > 0
+              .row.g-3
+                each model in models
+                  .col-md-6.col-lg-4
+                    .card.h-100
+                      .card-body
+                        .d-flex.align-items-center.mb-3
+                          .avatar.avatar-rounded.me-3(style=`background-color: ${model.ui && model.ui.color ? getColorClass(model.ui.color) : '#206bc4'}`)
+                            svg.icon: use(href=`#tabler-${model.ui && model.ui.icon ? model.ui.icon.replace('ti-', '') : 'database'}`)
+                          div
+                            h5.card-title.mb-1= model.displayName
+                            small.text-muted= model.name
+                            
+                        p.card-text.text-muted= model.description || 'No description provided'
+                        
+                        .d-flex.justify-content-between.align-items-center.mb-3
+                          div
+                            small.text-muted Fields: 
+                            strong= model.fields ? model.fields.length : 0
+                          div
+                            span.badge(class=getStatusBadgeClass(model.status))= model.status
+                            
+                        .d-flex.justify-content-between.align-items-center
+                          small.text-muted
+                            | Created #{moment(model.createdAt).fromNow()}
+                            if model.createdBy
+                              br
+                              | by #{model.createdBy.fullName || model.createdBy.username}
+                              
+                          .btn-group
+                            a.btn.btn-sm.btn-outline-primary(href=`/admin/models/${model._id}`)
+                              svg.icon: use(href='#tabler-eye')
+                            a.btn.btn-sm.btn-outline-secondary(href=`/admin/models/${model._id}/edit`)
+                              svg.icon: use(href='#tabler-edit')
+                            if model.status === 'active'
+                              a.btn.btn-sm.btn-outline-success(href=`/admin/${model.name.toLowerCase()}`)
+                                svg.icon: use(href='#tabler-external-link')
+            else
+              .text-center.py-5
+                svg.icon.icon-lg.text-muted.mb-3: use(href='#tabler-database')
+                h4.text-muted No Models Created Yet
+                p.text-muted Start building your application by creating your first data model
+                a.btn.btn-primary(href='/admin/models/new')
+                  svg.icon.me-1: use(href='#tabler-plus')
+                  | Create Your First Model
+                  
+            //- Pagination
+            if pagination && pagination.pages > 1
+              nav.mt-4
+                ul.pagination.justify-content-center
+                  li.page-item(class=pagination.page <= 1 ? 'disabled' : '')
+                    a.page-link(href=`?page=${pagination.page - 1}`) Previous
+                  - for (let i = 1; i <= Math.min(pagination.pages, 10); i++)
+                    li.page-item(class=pagination.page === i ? 'active' : '')
+                      a.page-link(href=`?page=${i}`)= i
+                  li.page-item(class=pagination.page >= pagination.pages ? 'disabled' : '')
+                    a.page-link(href=`?page=${pagination.page + 1}`) Next
+
+block scripts
+  script.
+    function getStatusBadgeClass(status) {
+      switch(status) {
+        case 'active': return 'bg-success';
+        case 'draft': return 'bg-warning';
+        case 'deprecated': return 'bg-danger';
+        default: return 'bg-secondary';
+      }
+    }
+    
+    function getColorClass(color) {
+      const colors = {
+        'primary': '#206bc4',
+        'secondary': '#6c757d',
+        'success': '#2fb344',
+        'danger': '#d63384',
+        'warning': '#f59f00',
+        'info': '#0ea5e9',
+        'light': '#f8f9fa',
+        'dark': '#1e293b'
+      };
+      return colors[color] || '#206bc4';
+    }

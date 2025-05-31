@@ -1,0 +1,226 @@
+//- File: views/admin/permissions/list.pug
+//- Permissions management view
+
+extends ../../layout
+
+block content
+  .container-fluid
+    .row
+      .col-12
+        .card
+          .card-header
+            h3.card-title
+              svg.icon.me-2: use(href='#tabler-shield-check')
+              | Permissions & Roles Management
+              
+          .card-body
+            ul.nav.nav-tabs.mb-4(role='tablist')
+              li.nav-item
+                a.nav-link.active(data-bs-toggle='tab', href='#permissions-tab') Permissions
+              li.nav-item
+                a.nav-link(data-bs-toggle='tab', href='#roles-tab') Roles
+              li.nav-item
+                a.nav-link(data-bs-toggle='tab', href='#policies-tab') Policies
+                
+            .tab-content
+              //- Permissions Tab
+              .tab-pane.show.active#permissions-tab
+                .d-flex.justify-content-between.align-items-center.mb-3
+                  h5 System Permissions
+                  button.btn.btn-primary.btn-sm(onclick='createPermission()')
+                    svg.icon.me-1: use(href='#tabler-plus')
+                    | Add Permission
+                    
+                .table-responsive
+                  table.table.table-striped
+                    thead
+                      tr
+                        th Resource
+                        th Action
+                        th Display Name
+                        th Status
+                        th Created By
+                        th Actions
+                    tbody
+                      if permissions && permissions.length > 0
+                        each permission in permissions
+                          tr
+                            td
+                              code= permission.resource
+                            td
+                              span.badge.bg-info= permission.action
+                            td= permission.displayName
+                            td
+                              if permission.isActive
+                                span.badge.bg-success Active
+                              else
+                                span.badge.bg-danger Inactive
+                            td= permission.createdBy ? permission.createdBy.fullName : 'System'
+                            td
+                              .btn-group
+                                button.btn.btn-sm.btn-outline-secondary(onclick=`editPermission('${permission._id}')`)
+                                  svg.icon: use(href='#tabler-edit')
+                                button.btn.btn-sm.btn-outline-danger(onclick=`deletePermission('${permission._id}')`)
+                                  svg.icon: use(href='#tabler-trash')
+                      else
+                        tr
+                          td.text-center(colspan='6')
+                            .py-3.text-muted No permissions defined
+                            
+              //- Roles Tab
+              .tab-pane#roles-tab
+                .d-flex.justify-content-between.align-items-center.mb-3
+                  h5 User Roles
+                  button.btn.btn-primary.btn-sm(onclick='createRole()')
+                    svg.icon.me-1: use(href='#tabler-plus')
+                    | Add Role
+                    
+                .row.g-3
+                  if roles && roles.length > 0
+                    each role in roles
+                      .col-md-6.col-lg-4
+                        .card
+                          .card-body
+                            .d-flex.justify-content-between.align-items-start.mb-2
+                              div
+                                h6.card-title= role.displayName
+                                small.text-muted= role.name
+                              span.badge(class=role.isSystemRole ? 'bg-warning' : 'bg-info')
+                                = role.isSystemRole ? 'System' : 'Custom'
+                                
+                            p.card-text.small= role.description || 'No description'
+                            
+                            .d-flex.justify-content-between.align-items-center
+                              small.text-muted
+                                | Level: #{role.level || 0}
+                                br
+                                | Permissions: #{role.permissions ? role.permissions.length : 0}
+                              .btn-group
+                                button.btn.btn-sm.btn-outline-secondary(onclick=`editRole('${role._id}')`)
+                                  svg.icon: use(href='#tabler-edit')
+                                if !role.isSystemRole
+                                  button.btn.btn-sm.btn-outline-danger(onclick=`deleteRole('${role._id}')`)
+                                    svg.icon: use(href='#tabler-trash')
+                  else
+                    .col-12
+                      .text-center.py-3
+                        .text-muted No roles defined
+                        
+              //- Policies Tab
+              .tab-pane#policies-tab
+                .d-flex.justify-content-between.align-items-center.mb-3
+                  h5 Access Policies
+                  button.btn.btn-primary.btn-sm(onclick='createPolicy()')
+                    svg.icon.me-1: use(href='#tabler-plus')
+                    | Add Policy
+                    
+                if policies && policies.length > 0
+                  .row.g-3
+                    each policy in policies
+                      .col-md-6
+                        .card
+                          .card-body
+                            .d-flex.justify-content-between.align-items-start.mb-2
+                              div
+                                h6.card-title= policy.displayName
+                                small.text-muted= policy.name
+                              span.badge(class=policy.type === 'abac' ? 'bg-warning' : 'bg-info')= policy.type.toUpperCase()
+                              
+                            p.card-text.small= policy.description || 'No description'
+                            
+                            .d-flex.justify-content-between.align-items-center
+                              small.text-muted
+                                | Priority: #{policy.priority || 0}
+                                br
+                                | Rules: #{policy.rules ? policy.rules.length : 0}
+                              .btn-group
+                                button.btn.btn-sm.btn-outline-secondary(onclick=`editPolicy('${policy._id}')`)
+                                  svg.icon: use(href='#tabler-edit')
+                                button.btn.btn-sm.btn-outline-danger(onclick=`deletePolicy('${policy._id}')`)
+                                  svg.icon: use(href='#tabler-trash')
+                else
+                  .text-center.py-3
+                    .text-muted No policies defined
+
+block scripts
+  script.
+    function createPermission() {
+      alert('Permission creation form would open here');
+    }
+    
+    function editPermission(id) {
+      alert('Edit permission: ' + id);
+    }
+    
+    function deletePermission(id) {
+      if (confirm('Are you sure you want to delete this permission?')) {
+        fetch('/api/permissions/permissions/' + id, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Error: ' + data.error);
+          }
+        });
+      }
+    }
+    
+    function createRole() {
+      alert('Role creation form would open here');
+    }
+    
+    function editRole(id) {
+      alert('Edit role: ' + id);
+    }
+    
+    function deleteRole(id) {
+      if (confirm('Are you sure you want to delete this role?')) {
+        fetch('/api/permissions/roles/' + id, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Error: ' + data.error);
+          }
+        });
+      }
+    }
+    
+    function createPolicy() {
+      alert('Policy creation form would open here');
+    }
+    
+    function editPolicy(id) {
+      alert('Edit policy: ' + id);
+    }
+    
+    function deletePolicy(id) {
+      if (confirm('Are you sure you want to delete this policy?')) {
+        fetch('/api/permissions/policies/' + id, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Error: ' + data.error);
+          }
+        });
+      }
+    }

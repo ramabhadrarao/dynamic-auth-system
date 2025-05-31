@@ -86,6 +86,7 @@ router.get('/users', requireRole(['admin', 'super_admin']), asyncHandler(async (
   res.render('admin/users/list', {
     title: 'Users',
     users,
+    currentUser: req.user,
     pagination: {
       page,
       limit,
