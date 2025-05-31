@@ -1,0 +1,111 @@
+//- File: views/admin/dynamic/list.pug
+//- Generic dynamic model list view
+
+extends ../../layout
+
+block content
+  .container-fluid
+    .row
+      .col-12
+        .card
+          .card-header.d-flex.justify-content-between.align-items-center
+            h3.card-title
+              svg.icon.me-2: use(href=`#tabler-${modelSchema && modelSchema.ui && modelSchema.ui.icon ? modelSchema.ui.icon.replace('ti-', '') : 'database'}`)
+              | #{modelSchema ? modelSchema.displayName : 'Records'}
+            .btn-group
+              a.btn.btn-primary(href=`/admin/${modelSchema ? modelSchema.name.toLowerCase() : 'model'}/new`)
+                svg.icon.me-1: use(href='#tabler-plus')
+                | Add New
+                
+          .card-body
+            //- Search and filters
+            .row.mb-3
+              .col-md-6
+                .input-group
+                  input.form-control(type='text', placeholder='Search...', name='search', value=search || '')
+                  button.btn.btn-outline-secondary(type='button', onclick='searchRecords()')
+                    svg.icon: use(href='#tabler-search')
+                    
+            //- Data table
+            .table-responsive
+              table.table.table-striped
+                thead
+                  tr
+                    if modelSchema && modelSchema.fields
+                      each field in modelSchema.fields
+                        if field.showInList
+                          th= field.label || field.name
+                    else
+                      th Name
+                      th Status
+                    th Actions
+                tbody
+                  if records && records.length > 0
+                    each record in records
+                      tr
+                        if modelSchema && modelSchema.fields
+                          each field in modelSchema.fields
+                            if field.showInList
+                              td= record[field.name] || '-'
+                        else
+                          td= record.name || record.title || record._id
+                          td Active
+                        td
+                          .btn-group
+                            a.btn.btn-sm.btn-outline-primary(href=`/admin/${modelSchema ? modelSchema.name.toLowerCase() : 'model'}/${record._id}`)
+                              svg.icon: use(href='#tabler-eye')
+                            a.btn.btn-sm.btn-outline-secondary(href=`/admin/${modelSchema ? modelSchema.name.toLowerCase() : 'model'}/${record._id}/edit`)
+                              svg.icon: use(href='#tabler-edit')
+                            button.btn.btn-sm.btn-outline-danger(onclick=`deleteRecord('${record._id}')`)
+                              svg.icon: use(href='#tabler-trash')
+                  else
+                    tr
+                      td.text-center(colspan='10')
+                        .py-4
+                          svg.icon.icon-lg.text-muted.mb-2: use(href='#tabler-database')
+                          br
+                          span.text-muted No records found
+                          
+            //- Pagination
+            if pagination && pagination.pages > 1
+              nav.mt-3
+                ul.pagination.justify-content-center
+                  li.page-item(class=pagination.page <= 1 ? 'disabled' : '')
+                    a.page-link(href=`?page=${pagination.page - 1}`) Previous
+                  - for (let i = 1; i <= Math.min(pagination.pages, 10); i++)
+                    li.page-item(class=pagination.page === i ? 'active' : '')
+                      a.page-link(href=`?page=${i}`)= i
+                  li.page-item(class=pagination.page >= pagination.pages ? 'disabled' : '')
+                    a.page-link(href=`?page=${pagination.page + 1}`) Next
+
+block scripts
+  script.
+    function searchRecords() {
+      const search = document.querySelector('input[name="search"]').value;
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      window.location.href = '?' + params.toString();
+    }
+    
+    function deleteRecord(id) {
+      if (confirm('Are you sure you want to delete this record?')) {
+        const modelName = '#{modelSchema ? modelSchema.name : ""}';
+        fetch(`/api/dynamic/${modelName}/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Error: ' + (data.error || 'Delete failed'));
+          }
+        })
+        .catch(error => {
+          alert('Error: ' + error.message);
+        });
+      }
+    }

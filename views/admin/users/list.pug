@@ -22,16 +22,16 @@ block content
             .row.mb-3
               .col-md-6
                 .input-group
-                  input.form-control(type='text', placeholder='Search users...', name='search', value=filters.search || '')
+                  input.form-control(type='text', placeholder='Search users...', name='search', value=filters && filters.search ? filters.search : '')
                   button.btn.btn-outline-secondary(type='button', onclick='searchUsers()')
                     svg.icon: use(href='#tabler-search')
               .col-md-3
                 select.form-select(name='role', onchange='filterUsers()')
                   option(value='') All Roles
-                  option(value='super_admin', selected=filters.role === 'super_admin') Super Admin
-                  option(value='admin', selected=filters.role === 'admin') Admin
-                  option(value='manager', selected=filters.role === 'manager') Manager
-                  option(value='user', selected=filters.role === 'user') User
+                  option(value='super_admin', selected=filters && filters.role === 'super_admin') Super Admin
+                  option(value='admin', selected=filters && filters.role === 'admin') Admin
+                  option(value='manager', selected=filters && filters.role === 'manager') Manager
+                  option(value='user', selected=filters && filters.role === 'user') User
                   
             //- Users table
             .table-responsive
@@ -48,39 +48,41 @@ block content
                     th Actions
                 tbody
                   if users && users.length > 0
-                    each user in users
+                    each userItem in users
                       tr
                         td
-                          .avatar.avatar-rounded(style=`background-color: ${getUserColor(user.role)}`)
-                            = user.firstName.charAt(0) + user.lastName.charAt(0)
+                          - var bgColor = userItem.role === 'super_admin' ? '#d63384' : userItem.role === 'admin' ? '#fd7e14' : userItem.role === 'manager' ? '#0ea5e9' : '#20c997'
+                          - var initials = (userItem.firstName && userItem.lastName) ? userItem.firstName.charAt(0) + userItem.lastName.charAt(0) : userItem.username ? userItem.username.charAt(0).toUpperCase() : 'U'
+                          .avatar.avatar-rounded(style=`background-color: ${bgColor}`)= initials
                         td
-                          strong= user.fullName
+                          strong= userItem.fullName || userItem.username || 'Unknown User'
                           br
-                          small.text-muted= user.username
-                        td= user.email
+                          small.text-muted= userItem.username || ''
+                        td= userItem.email || 'No email'
                         td
-                          span.badge(class=getRoleBadgeClass(user.role))= user.role
-                        td= user.department || '-'
+                          - var badgeClass = userItem.role === 'super_admin' ? 'bg-danger' : userItem.role === 'admin' ? 'bg-warning' : userItem.role === 'manager' ? 'bg-info' : 'bg-success'
+                          span.badge(class=badgeClass)= userItem.role || 'user'
+                        td= userItem.department || '-'
                         td
-                          if user.isActive
+                          if userItem.isActive
                             span.badge.bg-success Active
                           else
                             span.badge.bg-danger Inactive
                         td
-                          if user.lastLogin
-                            = moment(user.lastLogin).format('MMM DD, YYYY')
+                          if userItem.lastLogin
+                            = moment(userItem.lastLogin).format('MMM DD, YYYY')
                             br
-                            small.text-muted= moment(user.lastLogin).fromNow()
+                            small.text-muted= moment(userItem.lastLogin).fromNow()
                           else
                             span.text-muted Never
                         td
                           .btn-group
-                            a.btn.btn-sm.btn-outline-primary(href=`/admin/users/${user._id}`)
+                            a.btn.btn-sm.btn-outline-primary(href=`/admin/users/${userItem._id}`)
                               svg.icon: use(href='#tabler-eye')
-                            a.btn.btn-sm.btn-outline-secondary(href=`/admin/users/${user._id}/edit`)
+                            a.btn.btn-sm.btn-outline-secondary(href=`/admin/users/${userItem._id}/edit`)
                               svg.icon: use(href='#tabler-edit')
-                            if user._id.toString() !== currentUser._id.toString()
-                              button.btn.btn-sm.btn-outline-danger(onclick=`deleteUser('${user._id}', '${user.fullName}')`)
+                            if currentUser && userItem._id.toString() !== currentUser._id.toString()
+                              button.btn.btn-sm.btn-outline-danger(onclick=`deleteUser('${userItem._id}', '${userItem.fullName || userItem.username}')`)
                                 svg.icon: use(href='#tabler-trash')
                   else
                     tr
@@ -95,35 +97,18 @@ block content
               nav.mt-3
                 ul.pagination.justify-content-center
                   li.page-item(class=pagination.page <= 1 ? 'disabled' : '')
-                    a.page-link(href=`?page=${pagination.page - 1}&${new URLSearchParams(filters).toString()}`) Previous
+                    - var prevParams = filters ? new URLSearchParams(filters).toString() : ''
+                    a.page-link(href=`?page=${pagination.page - 1}&${prevParams}`) Previous
                   - for (let i = 1; i <= Math.min(pagination.pages, 10); i++)
                     li.page-item(class=pagination.page === i ? 'active' : '')
-                      a.page-link(href=`?page=${i}&${new URLSearchParams(filters).toString()}`)= i
+                      - var pageParams = filters ? new URLSearchParams(filters).toString() : ''
+                      a.page-link(href=`?page=${i}&${pageParams}`)= i
                   li.page-item(class=pagination.page >= pagination.pages ? 'disabled' : '')
-                    a.page-link(href=`?page=${pagination.page + 1}&${new URLSearchParams(filters).toString()}`) Next
+                    - var nextParams = filters ? new URLSearchParams(filters).toString() : ''
+                    a.page-link(href=`?page=${pagination.page + 1}&${nextParams}`) Next
 
 block scripts
   script.
-    function getUserColor(role) {
-      switch(role) {
-        case 'super_admin': return '#d63384';
-        case 'admin': return '#fd7e14';
-        case 'manager': return '#0ea5e9';
-        case 'user': return '#20c997';
-        default: return '#6c757d';
-      }
-    }
-    
-    function getRoleBadgeClass(role) {
-      switch(role) {
-        case 'super_admin': return 'bg-danger';
-        case 'admin': return 'bg-warning';
-        case 'manager': return 'bg-info';
-        case 'user': return 'bg-success';
-        default: return 'bg-secondary';
-      }
-    }
-    
     function searchUsers() {
       const search = document.querySelector('input[name="search"]').value;
       const role = document.querySelector('select[name="role"]').value;
@@ -144,7 +129,7 @@ block scripts
         fetch(`/api/users/${userId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
           }
         })
         .then(response => response.json())

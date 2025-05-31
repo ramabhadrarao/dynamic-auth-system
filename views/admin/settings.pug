@@ -1,0 +1,62 @@
+//- File: views/admin/settings.pug
+//- Settings page
+
+extends ../layout
+
+block content
+  .container-fluid
+    .row
+      .col-12
+        .card
+          .card-header
+            h3.card-title
+              svg.icon.me-2: use(href='#tabler-settings')
+              | System Settings
+              
+          .card-body
+            .row
+              .col-md-6
+                h5 Application Settings
+                .mb-3
+                  label.form-label Application Name
+                  input.form-control(type='text', value='Dynamic Auth System', readonly)
+                .mb-3
+                  label.form-label Environment
+                  input.form-control(type='text', value=process.env.NODE_ENV || 'development', readonly)
+                .mb-3
+                  label.form-label Version
+                  input.form-control(type='text', value='1.0.0', readonly)
+                  
+              .col-md-6
+                h5 Security Settings
+                .mb-3
+                  .form-check
+                    input.form-check-input(type='checkbox', id='enableRateLimit', checked)
+                    label.form-check-label(for='enableRateLimit') Enable Rate Limiting
+                .mb-3
+                  .form-check
+                    input.form-check-input(type='checkbox', id='enableCors', checked)
+                    label.form-check-label(for='enableCors') Enable CORS
+                .mb-3
+                  .form-check
+                    input.form-check-input(type='checkbox', id='enableHelmet', checked)
+                    label.form-check-label(for='enableHelmet') Enable Security Headers
+                    
+            hr
+            
+            .row
+              .col-12
+                h5 Database Settings
+                .alert.alert-info
+                  svg.icon.me-2: use(href='#tabler-info-circle')
+                  | Database connection is active and healthy
+                  
+            hr
+            
+            .row
+              .col-12
+                h5 Maintenance
+                .btn-group
+                  button.btn.btn-outline-warning Clear Cache
+                  button.btn.btn-outline-info Export Data
+                  button.btn.btn-outline-secondary View Logs

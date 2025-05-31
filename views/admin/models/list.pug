@@ -18,6 +18,20 @@ block content
                 | Create Model
                 
           .card-body
+            //- Search and filters
+            .row.mb-3
+              .col-md-6
+                .input-group
+                  input.form-control(type='text', placeholder='Search models...', name='search', value=filters && filters.search ? filters.search : '')
+                  button.btn.btn-outline-secondary(type='button', onclick='searchModels()')
+                    svg.icon: use(href='#tabler-search')
+              .col-md-3
+                select.form-select(name='status', onchange='filterModels()')
+                  option(value='') All Status
+                  option(value='active', selected=filters && filters.status === 'active') Active
+                  option(value='draft', selected=filters && filters.status === 'draft') Draft
+                  option(value='deprecated', selected=filters && filters.status === 'deprecated') Deprecated
+                  
             //- Models grid
             if models && models.length > 0
               .row.g-3
@@ -26,10 +40,26 @@ block content
                     .card.h-100
                       .card-body
                         .d-flex.align-items-center.mb-3
-                          .avatar.avatar-rounded.me-3(style=`background-color: ${model.ui && model.ui.color ? getColorClass(model.ui.color) : '#206bc4'}`)
-                            svg.icon: use(href=`#tabler-${model.ui && model.ui.icon ? model.ui.icon.replace('ti-', '') : 'database'}`)
+                          - 
+                            var iconColor = '#206bc4';
+                            if (model.ui && model.ui.color) {
+                              var colorMap = {
+                                'primary': '#206bc4',
+                                'secondary': '#6c757d', 
+                                'success': '#2fb344',
+                                'danger': '#d63384',
+                                'warning': '#f59f00',
+                                'info': '#0ea5e9',
+                                'light': '#f8f9fa',
+                                'dark': '#1e293b'
+                              };
+                              iconColor = colorMap[model.ui.color] || '#206bc4';
+                            }
+                          - var iconName = model.ui && model.ui.icon ? model.ui.icon.replace('ti-', '').replace('tabler-', '') : 'database'
+                          .avatar.avatar-rounded.me-3(style=`background-color: ${iconColor}`)
+                            svg.icon: use(href=`#tabler-${iconName}`)
                           div
-                            h5.card-title.mb-1= model.displayName
+                            h5.card-title.mb-1= model.displayName || model.name
                             small.text-muted= model.name
                             
                         p.card-text.text-muted= model.description || 'No description provided'
@@ -39,15 +69,17 @@ block content
                             small.text-muted Fields: 
                             strong= model.fields ? model.fields.length : 0
                           div
-                            span.badge(class=getStatusBadgeClass(model.status))= model.status
+                            - var statusClass = model.status === 'active' ? 'bg-success' : model.status === 'draft' ? 'bg-warning' : 'bg-danger'
+                            span.badge(class=statusClass)= model.status || 'draft'
                             
-                        .d-flex.justify-content-between.align-items-center
+                        .d-flex.justify-content-between.align-items-center.mb-3
                           small.text-muted
                             | Created #{moment(model.createdAt).fromNow()}
                             if model.createdBy
                               br
                               | by #{model.createdBy.fullName || model.createdBy.username}
                               
+                        .d-flex.justify-content-between.align-items-center
                           .btn-group
                             a.btn.btn-sm.btn-outline-primary(href=`/admin/models/${model._id}`)
                               svg.icon: use(href='#tabler-eye')
@@ -56,6 +88,27 @@ block content
                             if model.status === 'active'
                               a.btn.btn-sm.btn-outline-success(href=`/admin/${model.name.toLowerCase()}`)
                                 svg.icon: use(href='#tabler-external-link')
+                            else if model.status === 'draft'
+                              button.btn.btn-sm.btn-outline-success(onclick=`activateModel('${model._id}')`)
+                                svg.icon: use(href='#tabler-play')
+                          .dropdown
+                            button.btn.btn-sm.btn-outline-secondary.dropdown-toggle(data-bs-toggle='dropdown')
+                              svg.icon: use(href='#tabler-dots')
+                            .dropdown-menu
+                              a.dropdown-item(href=`/admin/models/${model._id}/export`)
+                                svg.icon.me-2: use(href='#tabler-download')
+                                | Export
+                              a.dropdown-item(href=`/admin/models/${model._id}/clone`)
+                                svg.icon.me-2: use(href='#tabler-copy')
+                                | Clone
+                              if model.status === 'active'
+                                a.dropdown-item(href='#', onclick=`deactivateModel('${model._id}')`)
+                                  svg.icon.me-2: use(href='#tabler-pause')
+                                  | Deactivate
+                              .dropdown-divider
+                              a.dropdown-item.text-danger(href='#', onclick=`deleteModel('${model._id}', '${model.displayName}')`)
+                                svg.icon.me-2: use(href='#tabler-trash')
+                                | Delete
             else
               .text-center.py-5
                 svg.icon.icon-lg.text-muted.mb-3: use(href='#tabler-database')
@@ -70,34 +123,125 @@ block content
               nav.mt-4
                 ul.pagination.justify-content-center
                   li.page-item(class=pagination.page <= 1 ? 'disabled' : '')
-                    a.page-link(href=`?page=${pagination.page - 1}`) Previous
+                    - var prevParams = filters ? new URLSearchParams(filters).toString() : ''
+                    a.page-link(href=`?page=${pagination.page - 1}&${prevParams}`) Previous
                   - for (let i = 1; i <= Math.min(pagination.pages, 10); i++)
                     li.page-item(class=pagination.page === i ? 'active' : '')
-                      a.page-link(href=`?page=${i}`)= i
+                      - var pageParams = filters ? new URLSearchParams(filters).toString() : ''
+                      a.page-link(href=`?page=${i}&${pageParams}`)= i
                   li.page-item(class=pagination.page >= pagination.pages ? 'disabled' : '')
-                    a.page-link(href=`?page=${pagination.page + 1}`) Next
+                    - var nextParams = filters ? new URLSearchParams(filters).toString() : ''
+                    a.page-link(href=`?page=${pagination.page + 1}&${nextParams}`) Next
 
 block scripts
   script.
-    function getStatusBadgeClass(status) {
-      switch(status) {
-        case 'active': return 'bg-success';
-        case 'draft': return 'bg-warning';
-        case 'deprecated': return 'bg-danger';
-        default: return 'bg-secondary';
+    function searchModels() {
+      const search = document.querySelector('input[name="search"]').value;
+      const status = document.querySelector('select[name="status"]').value;
+      
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (status) params.set('status', status);
+      
+      window.location.href = '?' + params.toString();
+    }
+    
+    function filterModels() {
+      searchModels();
+    }
+    
+    function activateModel(modelId) {
+      if (confirm('Are you sure you want to activate this model? This will make it available for use.')) {
+        fetch(`/api/models/${modelId}/activate`, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            showNotification('Model activated successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            showNotification('Error: ' + (data.error || 'Activation failed'), 'error');
+          }
+        })
+        .catch(error => {
+          showNotification('Error: ' + error.message, 'error');
+        });
       }
     }
     
-    function getColorClass(color) {
-      const colors = {
-        'primary': '#206bc4',
-        'secondary': '#6c757d',
-        'success': '#2fb344',
-        'danger': '#d63384',
-        'warning': '#f59f00',
-        'info': '#0ea5e9',
-        'light': '#f8f9fa',
-        'dark': '#1e293b'
-      };
-      return colors[color] || '#206bc4';
+    function deactivateModel(modelId) {
+      if (confirm('Are you sure you want to deactivate this model? This will make it unavailable for use.')) {
+        fetch(`/api/models/${modelId}/deactivate`, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            showNotification('Model deactivated successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            showNotification('Error: ' + (data.error || 'Deactivation failed'), 'error');
+          }
+        })
+        .catch(error => {
+          showNotification('Error: ' + error.message, 'error');
+        });
+      }
     }
+    
+    function deleteModel(modelId, modelName) {
+      if (confirm(`Are you sure you want to delete the model "${modelName}"? This action cannot be undone.`)) {
+        fetch(`/api/models/${modelId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            showNotification('Model deleted successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            showNotification('Error: ' + (data.error || 'Delete failed'), 'error');
+          }
+        })
+        .catch(error => {
+          showNotification('Error: ' + error.message, 'error');
+        });
+      }
+    }
+    
+    function showNotification(message, type) {
+      const notification = document.createElement('div');
+      notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible position-fixed`;
+      notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      notification.innerHTML = `
+        <div>${message}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 5000);
+    }
+    
+    // Search on Enter key
+    document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchModels();
+      }
+    });

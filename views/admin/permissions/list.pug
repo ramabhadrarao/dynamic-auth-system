@@ -157,7 +157,45 @@ block scripts
         fetch('/api/permissions/permissions/' + id, {
           method: 'DELETE',
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            'Authorization': 'Bearer ' + localStorage.getItem('token') // Changed from 'authToken' to 'token'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Error: ' + data.error);
+          }
+        });
+      }
+    }
+    
+    function deleteRole(id) {
+      if (confirm('Are you sure you want to delete this role?')) {
+        fetch('/api/permissions/roles/' + id, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token') // Changed from 'authToken' to 'token'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Error: ' + data.error);
+          }
+        });
+      }
+    }
+    
+    function deletePolicy(id) {
+      if (confirm('Are you sure you want to delete this policy?')) {
+        fetch('/api/permissions/policies/' + id, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token') // Changed from 'authToken' to 'token'
           }
         })
         .then(response => response.json())

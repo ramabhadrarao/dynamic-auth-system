@@ -1,0 +1,138 @@
+//- File: views/admin/profile.pug
+//- User profile page
+
+extends ../layout
+
+block content
+  .container-fluid
+    .row
+      .col-md-8.mx-auto
+        .card
+          .card-header
+            h3.card-title
+              svg.icon.me-2: use(href='#tabler-user')
+              | My Profile
+              
+          .card-body
+            form#profileForm
+              .row
+                .col-md-6
+                  .mb-3
+                    label.form-label First Name
+                    input.form-control(type='text', name='firstName', value=user ? user.firstName : '', required)
+                    
+                .col-md-6
+                  .mb-3
+                    label.form-label Last Name
+                    input.form-control(type='text', name='lastName', value=user ? user.lastName : '', required)
+                    
+              .mb-3
+                label.form-label Email
+                input.form-control(type='email', name='email', value=user ? user.email : '', required)
+                
+              .mb-3
+                label.form-label Username
+                input.form-control(type='text', value=user ? user.username : '', readonly)
+                
+              .mb-3
+                label.form-label Role
+                input.form-control(type='text', value=user ? user.role : '', readonly)
+                
+              .row
+                .col-md-6
+                  .mb-3
+                    label.form-label Department
+                    input.form-control(type='text', name='department', value=user && user.department ? user.department : '')
+                    
+                .col-md-6
+                  .mb-3
+                    label.form-label Phone
+                    input.form-control(type='tel', name='phone', value=user && user.phone ? user.phone : '')
+                    
+              .mb-3
+                button.btn.btn-primary(type='submit') Update Profile
+                
+            hr
+            
+            .row
+              .col-12
+                h5 Change Password
+                form#passwordForm
+                  .mb-3
+                    label.form-label Current Password
+                    input.form-control(type='password', name='currentPassword', required)
+                    
+                  .mb-3
+                    label.form-label New Password
+                    input.form-control(type='password', name='newPassword', required)
+                    
+                  .mb-3
+                    label.form-label Confirm New Password
+                    input.form-control(type='password', name='confirmPassword', required)
+                    
+                  button.btn.btn-warning(type='submit') Change Password
+
+block scripts
+  script.
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      
+      fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.user) {
+          alert('Profile updated successfully!');
+        } else {
+          alert('Error: ' + (data.error || 'Update failed'));
+        }
+      })
+      .catch(error => {
+        alert('Error: ' + error.message);
+      });
+    });
+    
+    document.getElementById('passwordForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      
+      if (data.newPassword !== data.confirmPassword) {
+        alert('New passwords do not match!');
+        return;
+      }
+      
+      fetch('/api/auth/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message) {
+          alert(data.message);
+          this.reset();
+        } else {
+          alert('Error: ' + (data.error || 'Password change failed'));
+        }
+      })
+      .catch(error => {
+        alert('Error: ' + error.message);
+      });
+    });
